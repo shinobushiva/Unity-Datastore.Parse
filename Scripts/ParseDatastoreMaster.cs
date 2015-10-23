@@ -16,34 +16,47 @@ public class ParseDatastoreMaster : MonoBehaviour {
 
 	public bool updateLoginStateFlag = true;
 
-	public CommentDelegateParseStore commentDelegate;
+	public delegate void OnLogin();
+	public event OnLogin onLogin;
+	
+	public delegate void OnLogout();
+	public event OnLogout onLogout;
 
 	// Use this for initialization
 	void Start () {
+
 		
-		UpdateLoginState ();
+		updateLoginStateFlag = true;
+		ResetComponents ();
 
 	}
 
-	public void UpdateLoginState(){
+	void ResetComponents ()
+	{
 		addPanel.gameObject.SetActive (false);
 		loginPanel.gameObject.SetActive (false);
 		blockPanel.gameObject.SetActive (false);
 		logoutPanel.gameObject.SetActive (false);
-		
-		if (ParseUser.CurrentUser != null && ParseUser.CurrentUser.IsAuthenticated) {
-			loginButton.GetComponentInChildren<Text> ().text = "Welcome: " + ParseUser.CurrentUser.Username;
-		} else {
-			loginButton.GetComponentInChildren<Text> ().text = "Login";
-		}
-		
 		loginPanel.username.text = "";
-		loginPanel.password.text = ""; 
+		loginPanel.password.text = "";
 		addPanel.username.text = "";
 		addPanel.password.text = "";
 		addPanel.email.text = "";
+	}
 
-		commentDelegate.LoadData ();
+	public void UpdateLoginState(){
+		ResetComponents ();
+
+		if (ParseUser.CurrentUser != null && ParseUser.CurrentUser.IsAuthenticated) {
+			loginButton.GetComponentInChildren<Text> ().text = "Welcome: " + ParseUser.CurrentUser.Username;
+			
+			onLogin();
+		} else {
+			loginButton.GetComponentInChildren<Text> ().text = "Login";
+
+			onLogout();
+		}
+
 	}
 	
 	// Update is called once per frame
@@ -106,7 +119,7 @@ public class ParseDatastoreMaster : MonoBehaviour {
 			} else {
 				// Login was successful.
 				print ("logout success");
-				
+								
 				updateLoginStateFlag = true;
 				
 			}
@@ -117,6 +130,11 @@ public class ParseDatastoreMaster : MonoBehaviour {
 		Login (loginPanel.username.text, loginPanel.password.text);
 	}
 
+	
+	public void AddUser(){
+		addPanel.AddUser(this);
+	}
+
 
 	public void Login(string name, string password){
 		Dismiss ();
@@ -125,6 +143,7 @@ public class ParseDatastoreMaster : MonoBehaviour {
 			if (t.IsFaulted || t.IsCanceled) {
 				// The login failed. Check the error to see why.
 				print ("login failed");
+				print (t.Exception);
 				
 				updateLoginStateFlag = true;
 			} else {
@@ -136,37 +155,5 @@ public class ParseDatastoreMaster : MonoBehaviour {
 			}
 		});
 	}
-	
-	public void AddUser(){
-		AddUser (addPanel.username.text, addPanel.password.text, addPanel.email.text);
-	}
-	public void AddUser(string name, string password, string email){
-		Dismiss ();
-		var user = new ParseUser()
-		{
-			Username = name,
-			Password = password,
-			Email = email
-		};
 
-		user.SignUpAsync().ContinueWith (t =>
-		{
-			if (t.IsFaulted || t.IsCanceled)
-			{
-				// The login failed. Check the error to see why.
-				print ("signup failed");
-				
-				updateLoginStateFlag = true;
-			}
-			else
-			{
-				// Login was successful.
-				print ("signup success");
-				
-				updateLoginStateFlag = true;
-			}
-		});
-
-
-	}
 }
