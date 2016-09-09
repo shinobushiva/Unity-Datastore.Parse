@@ -24,7 +24,6 @@ public class ParseDatastoreMaster : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-
 		
 		updateLoginStateFlag = true;
 		ResetComponents ();
